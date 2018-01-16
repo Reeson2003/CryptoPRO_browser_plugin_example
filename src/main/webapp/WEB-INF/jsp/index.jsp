@@ -1,19 +1,19 @@
 <html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script language="javascript" src="../../cadesplugin_api.js"></script>
+    <script language="javascript" src="../../signature.js"></script>
+</head>
 <body>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-<script language="javascript" src="cadesplugin_api.js"></script>
-<script language="JavaScript" src="signAsync.js"></script>
 <script language="javascript">
 
     function sign() {
         var sCertName = "Test";
         var text = getTextToSign();
-        var thenable = SignCreate(sCertName, text);
-        thenable.then(function (value) {
-            var signedMessage = value;
-            getSignatureElement().innerHTML = signedMessage;
-        }, function (reason) {
-            console.log(reason);
+
+        var sign = new Sign();
+        sign.signCreate(sCertName, text, function (signature) {
+            getSignatureElement().innerHTML = signature;
         });
     }
 
@@ -25,11 +25,17 @@
         return document.getElementById("signature");
     }
 
+    function getVerifyResultElement() {
+        return document.getElementById("verifyResult");
+    }
+
     function verifySign() {
         var signedMessage = getSignatureElement().innerHTML;
-        // console.log(Verify(signedMessage));
-        console.log(getTextToSign());
-        Verify(getTextToSign() ,signedMessage);
+        var text = getTextToSign();
+        var sign = new Sign();
+        sign.signVerifyOnClient(text, signedMessage, function (result) {
+            getVerifyResultElement().innerHTML = result;
+        });
     }
 
 </script>
@@ -37,6 +43,7 @@
 <input type="text" id="text" placeholder="enter text">
 <button onclick="sign()">Sign</button>
 <button onclick="verifySign()">Verify</button>
+<span id="verifyResult"></span>
 <br>
 <textarea id="signature" style="width: 580px; height: 200px"></textarea>
 <br>

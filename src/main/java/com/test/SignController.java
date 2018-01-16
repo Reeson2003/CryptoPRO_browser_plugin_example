@@ -13,4 +13,9 @@ public class SignController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         System.out.println(req.getParameter("signature").replaceAll(System.lineSeparator(), ""));
     }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("/WEB-INF/jsp/index.jsp").forward(req, resp);
+    }
 }

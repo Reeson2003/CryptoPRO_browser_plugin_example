@@ -11,7 +11,7 @@ var SERVLET_URL = "http://10.78.101.19:8081/crypto/servlet/verify/sign";
 var REST_URL = "http://10.78.101.19:8081/crypto/rest/api/verify/sign";
 
 
-function SignCreate(certSubjectName, dataToSign) {
+function SignCreateAsync(certSubjectName, dataToSign) {
     return new Promise(function (resolve, reject) {
         cadesplugin.async_spawn(function* (args) {
             try {
@@ -39,7 +39,6 @@ function SignCreate(certSubjectName, dataToSign) {
                 yield oSignedData.propset_Content(contentBase64);
 
                 var sSignedMessage = yield oSignedData.SignCades(oSigner, CADESCOM_CADES_BES/*CADESCOM_CADES_X_LONG_TYPE_1*/, true);
-                yield oSignedData.VerifyCades(sSignedMessage, CADESCOM_CADES_BES/*CADESCOM_CADES_X_LONG_TYPE_1*/, true);
                 yield oStore.Close();
 
                 args[1](sSignedMessage);
@@ -52,21 +51,21 @@ function SignCreate(certSubjectName, dataToSign) {
 }
 
 
-function Verify(dataToVerify, sSignedMessage) {
-    var result = verifyNovikovServlet(dataToVerify, sSignedMessage);
-    result.then(function (value) {
-        console.log("Verify Novikov servlet", value);
-    });
+function VerifyAsync(dataToVerify, sSignedMessage) {
+    // var result = verifyNovikovServlet(dataToVerify, sSignedMessage);
+    // result.then(function (value) {
+    //     console.log("Verify Novikov servlet", value);
+    // });
 
     /*result = verifyNovikovRest(dataToVerify, sSignedMessage);
     result.then(function (value) {
         console.log("Verify Novikov rest", value);
     });*/
 
-    result = verifyOnClient(dataToVerify, sSignedMessage);
-    result.then(function (value) {
-        console.log("Verify on client", value);
-    });
+    return verifyOnClient(dataToVerify, sSignedMessage);
+    // result.then(function (value) {
+    //     console.log("Verify on client", value);
+    // });
 }
 
 function verifyOnClient(dataToVerify, sSignedMessage) {
