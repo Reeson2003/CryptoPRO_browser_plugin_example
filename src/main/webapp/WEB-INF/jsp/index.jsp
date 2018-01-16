@@ -3,6 +3,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script language="javascript" src="../../cadesplugin_api.js"></script>
     <script language="javascript" src="../../signature.js"></script>
+    <script language="JavaScript" src="../../signatureAsync.js"></script>
+    <script language="JavaScript" src="../../signatureSync.js"></script>
 </head>
 <body>
 <script language="javascript">
