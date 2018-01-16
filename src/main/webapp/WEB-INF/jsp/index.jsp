@@ -1,8 +1,10 @@
 <html>
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script language="JavaScript" src="../../base64.js"></script>
     <script language="javascript" src="../../cadesplugin_api.js"></script>
     <script language="javascript" src="../../signature.js"></script>
+    <script language="JavaScript" src="../../signatureConstants.js"></script>
     <script language="JavaScript" src="../../signatureAsync.js"></script>
     <script language="JavaScript" src="../../signatureSync.js"></script>
 </head>
