@@ -3,9 +3,6 @@ var SignAsync = function () {
         checkBrowserPlugin: function (callback) {
             new PluginSupportCheckerAsync(callback).check();
         },
-        findAllCertificates: function (callback) {
-            new CertificatesLoaderAsync(callback).load();
-        },
         findCertificates: function (name, callback) {
             new CertificatesLoaderAsync(name, callback).load();
         },
@@ -44,14 +41,13 @@ function CertificatesLoaderAsync(name, callback) {
         name: name,
         callback: callback,
         load: function () {
-            this.loadAsync(props);
+            this.loadAsync(this.name, this.getCertificatesAsyncCallback(this.callback));
         },
-        loadAsync: function () {
-            var props = this;
-            this.loadCertsPromise(this.name).then(function (success) {
-                props.callback(success);
+        loadAsync: function (name, callback) {
+            this.loadCertsPromise(name).then(function (success) {
+                callback(success);
             }, function (error) {
-                props.callback(error);
+                callback(error);
             });
         },
         loadCertsPromise: function (name) {
@@ -76,6 +72,57 @@ function CertificatesLoaderAsync(name, callback) {
                     }
                 }, resolve, reject, name);
             })
+        },
+        getCertificatesAsyncCallback: function (callback) {
+            var props = this;
+            return function (oCertificates) {
+                var result = [];
+                var count = oCertificates.Count;
+                count.then(function (countSuccess) {
+                    for (var i = 1; i <= countSuccess - 1; i++) {
+                        var cert = oCertificates.Item(i);
+                        // if (!cert.IsValid()) continue;
+                        cert.then(function (certSuccess) {
+                            props.certToJSONAsync(certSuccess).then(
+                                function (certJsonSuccess) {
+                                    result.push(certJsonSuccess);
+                                }
+                            );
+                        })
+                    }
+                    var cert = oCertificates.Item(countSuccess);
+                    // if (!cert.IsValid()) continue;
+                    cert.then(function (certSuccess) {
+                        props.certToJSONAsync(certSuccess).then(
+                            function (certJsonSuccess) {
+                                result.push(certJsonSuccess);
+                                callback(result);
+                            }
+                        );
+                    })
+                })
+            }
+        },
+        certToJSONAsync: function (cert) {
+            return new Promise(function (resolve, reject) {
+                var thumbPromise = cert.Thumbprint;
+                thumbPromise.then(function (thumb) {
+                    var stringPromise = cert.SubjectName;
+                    stringPromise.then(function (string) {
+                        //O=ANT-Inform, L=Saint Petersburg, CN=Nikolai Sergeevich Novikov, OU=Generic Department, C=RU, E=n.novikov@spb.ant-inform.ru, S=Saint Petersburg
+                        var cn = string.match(/CN=([^,]+)/);
+                        var e = string.match(/E=([^,]+)/);
+                        var name;
+
+                        if (cn && e) {
+                            name = cn[1] + '(' + e[1] + ')';
+                        } else {
+                            name = string.substring(0, 40);
+                        }
+                        resolve({thumb: thumb, name: name});
+                    })
+                })
+            })
         }
     }
 }
@@ -86,7 +133,7 @@ function SignCreatorAsync(certSubjectName, dataToSign, callback) {
         dataToSign: dataToSign,
         callback: callback,
         sign: function () {
-            new CertificatesLoaderAsync(this.certSubjectName, this.certsLoadCallback()).loadAsync();
+            new CertificatesLoaderAsync().loadAsync(this.certSubjectName, this.certsLoadCallback());
         },
         certsLoadCallback: function () {
             var props = this;

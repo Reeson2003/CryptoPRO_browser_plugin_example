@@ -16,7 +16,7 @@ var Sign = function () {
             this.sign.checkBrowserPlugin(callback);
         },
         findAllCertificates: function (callback) {
-            this.sign.findAllCertificates(callback);
+            this.sign.findCertificates("",callback);
         },
         findCertificates: function(name, callback) {
             this.sign.findCertificates(name, callback);

@@ -3,9 +3,6 @@ var SignSync = function () {
         checkBrowserPlugin: function (callback) {
             new PluginSupportCheckerSync(callback).check();
         },
-        findAllCertificates: function (callback) {
-            new CertificatesLoaderSync(callback).load();
-        },
         findCertificates: function (name, callback) {
             new CertificatesLoaderSync(name, callback).load();
         },
@@ -46,7 +43,10 @@ function CertificatesLoaderSync(name, callback) {
         name: name,
         callback: callback,
         load: function () {
-            this.loadSync(this.callback, this.name);
+            var props = this;
+            this.loadSync(function (certificates) {
+                props.callback(props.getCertificatesSync(certificates))
+            }, this.name);
         },
         loadSync: function (callback, name) {
             var oStore = cadesplugin.CreateObject(CadesConstants.STORE);
@@ -57,6 +57,29 @@ function CertificatesLoaderSync(name, callback) {
             }
             callback(oCertificates);
             oStore.close();
+        },
+        getCertificatesSync: function (oCertificates) {
+            var result = [];
+            for (var i = 1; i <= oCertificates.Count; i++) {
+                var cert = oCertificates.Item(i);
+                // if (!cert.IsValid()) continue;
+                result.push(this.certToJSONSync(cert));
+            }
+            return result;
+        },
+        certToJSONSync: function (cert) {
+            var thumb = cert.Thumbprint;
+            var string = cert.SubjectName;
+            //O=ANT-Inform, L=Saint Petersburg, CN=Nikolai Sergeevich Novikov, OU=Generic Department, C=RU, E=n.novikov@spb.ant-inform.ru, S=Saint Petersburg
+            var cn = string.match(/CN=([^,]+)/);
+            var e = string.match(/E=([^,]+)/);
+            var name;
+            if (cn && e) {
+                name = cn[1] + '(' + e[1] + ')';
+            } else {
+                name = string.substring(0, 40);
+            }
+            return {thumb: thumb, name: name};
         }
     }
 }
@@ -67,11 +90,11 @@ function SignCreatorSync(certSubjectName, dataToSign, callback) {
         dataToSign: dataToSign,
         callback: callback,
         sign: function () {
-            var props = this;
-            new CertificatesLoaderSync(this.certSubjectName,this.certsLoadCallback(props)).load();
+            // var props = this;
+            new CertificatesLoaderSync().loadSync(this.certsLoadCallback(), this.certSubjectName);
         },
-        certsLoadCallback: function (props) {
-            props = this;
+        certsLoadCallback: function () {
+            var props = this;
             return function (certificates) {
                 props.callback(props.signCreateSync(certificates, props.dataToSign));
             }
@@ -110,7 +133,7 @@ function SignVerifierSync(dataToVerify, signature, callback) {
         verifySync: function (props) {
             props.callback(props.getVerifyResult(props))
         },
-        getVerifyResult: function(props) {
+        getVerifyResult: function (props) {
             var oSignedData = cadesplugin.CreateObject(CadesConstants.SIGNED_DATA);
             oSignedData.ContentEncoding = cadesplugin.CADESCOM_BASE64_TO_BINARY;
             var dataToVerifyBase64 = Base64.encode(props.dataToVerify);

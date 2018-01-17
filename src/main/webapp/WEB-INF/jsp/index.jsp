@@ -11,14 +11,36 @@
 <body>
 <script language="javascript">
 
+    function loadCertificates() {
+        new Sign().findAllCertificates(function (certificates) {
+            var certListElems = getCertificatesList(certificates);
+            getCertificatesElement().innerHTML = certListElems.join("");
+        })
+    }
+
+    function getCertificatesList(certificatesArray) {
+        var result = [];
+        certificatesArray.forEach(function (element) {
+            result.push(convertToListElement(element.name));
+        });
+        return result;
+    }
+
+    function convertToListElement(text) {
+        return "<li>" + text + "</li>"
+    }
+
     function sign() {
         var sCertName = "Test";
         var text = getTextToSign();
 
-        var sign = new Sign();
-        sign.signCreate(sCertName, text, function (signature) {
+        new Sign().signCreate(sCertName, text, function (signature) {
             getSignatureElement().innerHTML = signature;
         });
+    }
+
+    function getCertificatesElement() {
+        return document.getElementById("certificates_list");
     }
 
     function getTextToSign() {
@@ -43,8 +65,11 @@
     }
 
 </script>
-<h2>Hello</h2>
-<input type="text" id="text" placeholder="enter text">
+<button onclick="loadCertificates()">Load certificates</button>
+<div id="certificates">
+    <ul id="certificates_list"></ul>
+</div>
+<input type="text" id="text" placeholder="enter text" value="Message">
 <button onclick="sign()">Sign</button>
 <button onclick="verifySign()">Verify</button>
 <span id="verifyResult"></span>
