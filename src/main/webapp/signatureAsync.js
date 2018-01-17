@@ -3,8 +3,11 @@ var SignAsync = function () {
         checkBrowserPlugin: function (callback) {
             new PluginSupportCheckerAsync(callback).check();
         },
-        findCertificates: function (name, callback) {
-            new CertificatesLoaderAsync(name, callback).load();
+        findCertificatesByName: function (name, callback) {
+            new CertificatesLoaderAsync(name, "name", callback).load();
+        },
+        findCertificatesByThumbprint: function (thumb, callback) {
+            new CertificatesLoaderAsync(name, "thumb", callback).load();
         },
         signCreate: function (certSubjectName, dataToSign, callback) {
             new SignCreatorAsync(certSubjectName, dataToSign, callback).sign();
@@ -12,9 +15,6 @@ var SignAsync = function () {
         signVerifyOnClient: function (signedData, signature, callback) {
             new SignVerifierAsync(signedData, signature, callback).verify();
         },
-        signVerifyRemote: function (signedData, signature, callback) {
-
-        }
     }
 };
 
@@ -36,21 +36,32 @@ function PluginSupportCheckerAsync(callback) {
     }
 }
 
-function CertificatesLoaderAsync(name, callback) {
+function CertificatesLoaderAsync(name, searchBy, callback) {
+    var type = undefined;
+    if (searchBy == "name")
+        type = CadesConstants.FIND_SUBJECT_NAME;
+    else
+        type = CadesConstants.FIND_SHA1_HASH;
     return {
+        type: type,
         name: name,
         callback: callback,
         load: function () {
-            this.loadAsync(this.name, this.getCertificatesAsyncCallback(this.callback));
+            this.loadAsync();
         },
-        loadAsync: function (name, callback) {
-            this.loadCertsPromise(name).then(function (success) {
-                callback(success);
+        loadAsync: function () {
+            var props = this;
+            this.loadCertsPromise(this.name, this.type).then(function (success) {
+                props.getCertificatesAsync(success).then(
+                    function (success) {
+                        props.callback(success);
+                    }
+                )
             }, function (error) {
-                callback(error);
+                props.callback(error);
             });
         },
-        loadCertsPromise: function (name) {
+        loadCertsPromise: function (name, type) {
             return new Promise(function (resolve, reject) {
                 cadesplugin.async_spawn(function* (args) {
                     try {
@@ -59,7 +70,7 @@ function CertificatesLoaderAsync(name, callback) {
                             CadesConstants.STORE_MAXIMUM_ALLOWED);
                         var certificatesObject = yield oStore.Certificates;
                         var oCertificates = yield certificatesObject.Find(
-                            CadesConstants.FIND_SUBJECT_NAME, args[2]);
+                            type, args[2]);
                         var Count = yield oCertificates.Count;
                         if (Count == 0) {
                             args[1]("Certificates not found")
@@ -73,35 +84,42 @@ function CertificatesLoaderAsync(name, callback) {
                 }, resolve, reject, name);
             })
         },
-        getCertificatesAsyncCallback: function (callback) {
+        getCertificatesAsync: function (certificates) {
             var props = this;
-            return function (oCertificates) {
+            return new Promise(function (resolve, reject) {
                 var result = [];
-                var count = oCertificates.Count;
+                var count = certificates.Count;
                 count.then(function (countSuccess) {
+                    var certToArray = function (certSuccess) {
+                        props.certToJSONAsync(certSuccess).then(
+                            function (certJsonSuccess) {
+                                result.push(certJsonSuccess);
+                            },
+                            function (error) {
+                                reject(error);
+                            }
+                        );
+                    };
                     for (var i = 1; i <= countSuccess - 1; i++) {
-                        var cert = oCertificates.Item(i);
+                        var cert = certificates.Item(i);
                         // if (!cert.IsValid()) continue;
-                        cert.then(function (certSuccess) {
-                            props.certToJSONAsync(certSuccess).then(
-                                function (certJsonSuccess) {
-                                    result.push(certJsonSuccess);
-                                }
-                            );
-                        })
+                        cert.then(certToArray)
                     }
-                    var cert = oCertificates.Item(countSuccess);
+                    var cert = certificates.Item(countSuccess);
                     // if (!cert.IsValid()) continue;
                     cert.then(function (certSuccess) {
                         props.certToJSONAsync(certSuccess).then(
                             function (certJsonSuccess) {
                                 result.push(certJsonSuccess);
-                                callback(result);
+                                resolve(result);
+                            },
+                            function (error) {
+                                reject(error);
                             }
                         );
                     })
                 })
-            }
+            })
         },
         certToJSONAsync: function (cert) {
             return new Promise(function (resolve, reject) {
@@ -133,20 +151,20 @@ function SignCreatorAsync(certSubjectName, dataToSign, callback) {
         dataToSign: dataToSign,
         callback: callback,
         sign: function () {
-            new CertificatesLoaderAsync().loadAsync(this.certSubjectName, this.certsLoadCallback());
+            this.signAsync();
         },
-        certsLoadCallback: function () {
+        signAsync: function () {
+            var certsPromise = new CertificatesLoaderAsync()
+                .loadCertsPromise(this.certSubjectName, CadesConstants.FIND_SHA1_HASH);
             var props = this;
-            return function (certificates) {
-                props.signCreateAsync(certificates, props.dataToSign).then(function (success) {
-                    props.callback(success);
+            certsPromise.then(function (certs) {
+                var signPromise = props.signCreatePromise(certs, props.dataToSign);
+                signPromise.then(function (sign) {
+                    props.callback(sign);
                 }, function (error) {
                     props.callback(error);
-                });
-            }
-        },
-        signCreateAsync: function (certificates, dataToSign) {
-            return this.signCreatePromise(certificates, dataToSign);
+                })
+            })
         },
         signCreatePromise: function (certificates, dataToSign) {
             return new Promise(function (resolve, reject) {

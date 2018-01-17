@@ -16,10 +16,13 @@ var Sign = function () {
             this.sign.checkBrowserPlugin(callback);
         },
         findAllCertificates: function (callback) {
-            this.sign.findCertificates("",callback);
+            this.sign.findCertificatesByName("",callback);
         },
-        findCertificates: function(name, callback) {
-            this.sign.findCertificates(name, callback);
+        findCertificatesByName: function(name, callback) {
+            this.sign.findCertificatesByName(name, callback);
+        },
+        findCertificateByThumbprint: function(thumb, callback){
+            this.sign.findCertificateByThumbprint(thumb, callback);
         },
         signCreate: function (certSubjectName, dataToSign, callback) {
             this.sign.signCreate(certSubjectName, dataToSign, callback);
@@ -28,7 +31,7 @@ var Sign = function () {
             this.sign.signVerifyOnClient(signedData, signature, callback);
         },
         signVerifyRemote: function (signedData, signature, callback) {
-
+            throw "unsupported";
         }
     }
 };

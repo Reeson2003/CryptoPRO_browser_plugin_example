@@ -11,6 +11,8 @@
 <body>
 <script language="javascript">
 
+    var certThumbprint = undefined;
+
     function loadCertificates() {
         new Sign().findAllCertificates(function (certificates) {
             var certListElems = getCertificatesList(certificates);
@@ -21,22 +23,27 @@
     function getCertificatesList(certificatesArray) {
         var result = [];
         certificatesArray.forEach(function (element) {
-            result.push(convertToListElement(element.name));
+            result.push(convertToListElement(element.name, element.thumb));
         });
         return result;
     }
 
-    function convertToListElement(text) {
-        return "<li>" + text + "</li>"
+    function setCertificateThumbprint(thumb) {
+        certThumbprint = thumb;
+    }
+
+    function convertToListElement(text, thumb) {
+        return "<li onclick='setCertificateThumbprint(\"" + thumb + "\")'>" + text + "<br>" + thumb + "</li>";
     }
 
     function sign() {
-        var sCertName = "Test";
-        var text = getTextToSign();
-
-        new Sign().signCreate(sCertName, text, function (signature) {
-            getSignatureElement().innerHTML = signature;
-        });
+        if (certThumbprint) {
+            var sCertName = certThumbprint;
+            var text = getTextToSign();
+            new Sign().signCreate(sCertName, text, function (signature) {
+                getSignatureElement().innerHTML = signature;
+            });
+        }
     }
 
     function getCertificatesElement() {

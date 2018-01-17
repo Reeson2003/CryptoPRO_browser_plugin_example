@@ -3,8 +3,11 @@ var SignSync = function () {
         checkBrowserPlugin: function (callback) {
             new PluginSupportCheckerSync(callback).check();
         },
-        findCertificates: function (name, callback) {
-            new CertificatesLoaderSync(name, callback).load();
+        findCertificatesByName: function (name, callback) {
+            new CertificatesLoaderSync(name, "name", callback).load();
+        },
+        findCertificatesByThumbprint: function (thumb, callback) {
+            new CertificatesLoaderSync(name, "thumb", callback).load();
         },
         signCreate: function (certSubjectName, dataToSign, callback) {
             new SignCreatorSync(certSubjectName, dataToSign, callback).sign();
@@ -12,9 +15,6 @@ var SignSync = function () {
         signVerifyOnClient: function (signedData, signature, callback) {
             new SignVerifierSync(signedData, signature, callback).verify();
         },
-        signVerifyRemote: function (signedData, signature, callback) {
-
-        }
     }
 };
 
@@ -38,20 +38,28 @@ function PluginSupportCheckerSync(callback) {
     }
 }
 
-function CertificatesLoaderSync(name, callback) {
+function CertificatesLoaderSync(name, searchBy, callback) {
+    var type = undefined;
+    if (searchBy == "name")
+        type = CadesConstants.FIND_SUBJECT_NAME;
+    else
+        type = CadesConstants.FIND_SHA1_HASH;
     return {
+        type: type,
         name: name,
         callback: callback,
         load: function () {
             var props = this;
+            // console.log(this.callback);
             this.loadSync(function (certificates) {
-                props.callback(props.getCertificatesSync(certificates))
-            }, this.name);
+                var result = props.getCertificatesSync(certificates);
+                props.callback(result);
+            }, this.name, this.type);
         },
-        loadSync: function (callback, name) {
+        loadSync: function (callback, name, type) {
             var oStore = cadesplugin.CreateObject(CadesConstants.STORE);
             oStore.Open(CadesConstants.userStore, CadesConstants.MY_STORE, CadesConstants.STORE_MAXIMUM_ALLOWED);
-            var oCertificates = oStore.Certificates.Find(CadesConstants.FIND_SUBJECT_NAME, name);
+            var oCertificates = oStore.Certificates.Find(type, name);
             if (oCertificates.Count == 0) {
                 callback("Certificate not found");
             }
@@ -91,7 +99,7 @@ function SignCreatorSync(certSubjectName, dataToSign, callback) {
         callback: callback,
         sign: function () {
             // var props = this;
-            new CertificatesLoaderSync().loadSync(this.certsLoadCallback(), this.certSubjectName);
+            new CertificatesLoaderSync("", "thumb").loadSync(this.certsLoadCallback(), this.certSubjectName);
         },
         certsLoadCallback: function () {
             var props = this;
