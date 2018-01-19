@@ -58,16 +58,26 @@
         return document.getElementById("signature");
     }
 
-    function getVerifyResultElement() {
-        return document.getElementById("verifyResult");
+    function getVerifyOnClientResultElement() {
+        return document.getElementById("verifyOnClientResult");
     }
 
-    function verifySign() {
+    function verifySignOnClient() {
         var signedMessage = getSignatureElement().innerHTML;
         var text = getTextToSign();
         var sign = new Sign();
         sign.signVerifyOnClient(text, signedMessage, function (result) {
-            getVerifyResultElement().innerHTML = result;
+            getVerifyOnClientResultElement().innerHTML = result;
+        });
+    }
+
+    function verifySignOnServer() {
+        var signedMessage = getSignatureElement().innerHTML;
+        var text = getTextToSign();
+        var sign = new Sign();
+        sign.signVerifyRemote(text, signedMessage, function (result) {
+            console.log(result);
+            getVerifyOnClientResultElement().innerHTML = result;
         });
     }
 
@@ -78,8 +88,11 @@
 </div>
 <input type="text" id="text" placeholder="enter text" value="Message">
 <button onclick="sign()">Sign</button>
-<button onclick="verifySign()">Verify</button>
-<span id="verifyResult"></span>
+<button onclick="verifySignOnClient()">VerifyOnClient</button>
+<span id="verifyOnClientResult"></span>
+<br>
+<button onclick="verifySignOnServer()">VerifyOnServer</button>
+<span id="verifyOnServerResult"></span>
 <br>
 <textarea id="signature" style="width: 580px; height: 200px"></textarea>
 <br>

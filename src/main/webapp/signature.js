@@ -31,7 +31,50 @@ var Sign = function () {
             this.sign.signVerifyOnClient(signedData, signature, callback);
         },
         signVerifyRemote: function (signedData, signature, callback) {
-            throw "unsupported";
+            /*throw "unsupported";*/
+            verifyRemote(signedData, signature).then(function (success) {
+                callback(success.status);
+            })
         }
     }
 };
+
+function verifyRemote(dataToVerify, sign) {
+    return new Promise(function (resolve, reject) {
+        var content = Base64.encode(dataToVerify);
+        var data = {
+            signature: sign,
+            data: content
+        };
+        return $.ajax({
+            type: "POST", cache: false,
+            url: REMOTE_URL,
+            data: data,
+            success: function (data) {
+                resolve(data);
+            }
+        });
+    })
+}
+
+function verifyNovikovServlet(dataToVerify, sign) {
+    return new Promise(function (resolve, reject) {
+        var content = Base64.encode(dataToVerify);
+        var data = {
+            signatura: sign,
+            content: content
+        };
+        return $.ajax({
+            type: "POST", cache: false,
+            url: SERVLET_URL,
+            data: data,
+            success: function (data) {
+                resolve(data);
+            }
+        });
+    })
+}
+
+var REMOTE_URL = "http://localhost:8080/sign";
+
+var SERVLET_URL = "http://localhost:8080/servlet/verify/sign";
