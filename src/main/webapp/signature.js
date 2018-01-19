@@ -57,24 +57,4 @@ function verifyRemote(dataToVerify, sign) {
     })
 }
 
-function verifyNovikovServlet(dataToVerify, sign) {
-    return new Promise(function (resolve, reject) {
-        var content = Base64.encode(dataToVerify);
-        var data = {
-            signatura: sign,
-            content: content
-        };
-        return $.ajax({
-            type: "POST", cache: false,
-            url: SERVLET_URL,
-            data: data,
-            success: function (data) {
-                resolve(data);
-            }
-        });
-    })
-}
-
 var REMOTE_URL = "http://localhost:8080/sign";
-
-var SERVLET_URL = "http://localhost:8080/servlet/verify/sign";
