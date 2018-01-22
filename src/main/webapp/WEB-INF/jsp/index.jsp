@@ -33,7 +33,7 @@
     }
 
     function convertToListElement(text, thumb) {
-        return "<li onclick='setCertificateThumbprint(\"" + thumb + "\")'>" + text + "<br>" + thumb + "</li>";
+        return "<li onclick='setCertificateThumbprint(\"" + thumb + "\")' style='background-color: azure'>" + text + "<br>" + thumb + "</li>";
     }
 
     function sign() {

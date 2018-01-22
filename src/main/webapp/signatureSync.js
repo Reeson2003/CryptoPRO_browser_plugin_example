@@ -50,7 +50,6 @@ function CertificatesLoaderSync(name, searchBy, callback) {
         callback: callback,
         load: function () {
             var props = this;
-            // console.log(this.callback);
             this.loadSync(function (certificates) {
                 var result = props.getCertificatesSync(certificates);
                 props.callback(result);
@@ -70,7 +69,6 @@ function CertificatesLoaderSync(name, searchBy, callback) {
             var result = [];
             for (var i = 1; i <= oCertificates.Count; i++) {
                 var cert = oCertificates.Item(i);
-                // if (!cert.IsValid()) continue;
                 result.push(this.certToJSONSync(cert));
             }
             return result;
@@ -98,7 +96,6 @@ function SignCreatorSync(certSubjectName, dataToSign, callback) {
         dataToSign: dataToSign,
         callback: callback,
         sign: function () {
-            // var props = this;
             new CertificatesLoaderSync("", "thumb").loadSync(this.certsLoadCallback(), this.certSubjectName);
         },
         certsLoadCallback: function () {

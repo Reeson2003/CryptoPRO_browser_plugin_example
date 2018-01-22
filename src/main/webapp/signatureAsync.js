@@ -38,7 +38,7 @@ function PluginSupportCheckerAsync(callback) {
 
 function CertificatesLoaderAsync(name, searchBy, callback) {
     var type = undefined;
-    if (searchBy == "name")
+    if (searchBy === "name")
         type = CadesConstants.FIND_SUBJECT_NAME;
     else
         type = CadesConstants.FIND_SHA1_HASH;
@@ -101,13 +101,9 @@ function CertificatesLoaderAsync(name, searchBy, callback) {
                         );
                     };
                     for (var i = 1; i <= countSuccess - 1; i++) {
-                        var cert = certificates.Item(i);
-                        // if (!cert.IsValid()) continue;
-                        cert.then(certToArray)
+                        certificates.Item(i).then(certToArray)
                     }
-                    var cert = certificates.Item(countSuccess);
-                    // if (!cert.IsValid()) continue;
-                    cert.then(function (certSuccess) {
+                    certificates.Item(countSuccess).then(function (certSuccess) {
                         props.certToJSONAsync(certSuccess).then(
                             function (certJsonSuccess) {
                                 result.push(certJsonSuccess);
