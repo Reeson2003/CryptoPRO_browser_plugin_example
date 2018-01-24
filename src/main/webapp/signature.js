@@ -57,4 +57,4 @@ function verifyRemote(dataToVerify, sign) {
     })
 }
 
-var REMOTE_URL = "http://localhost:8080/sign";
+var REMOTE_URL = "http://localhost:8080/verify";

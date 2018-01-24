@@ -78,8 +78,6 @@ function CertificatesLoaderAsync(name, searchBy, callback) {
                         args[0](oCertificates);
                     } catch (err) {
                         args[1](err);
-                    } finally {
-                        oStore.Close();
                     }
                 }, resolve, reject, name);
             })

@@ -46,7 +46,7 @@ public class SignController extends HttpServlet {
         InputStream dataIS = getStream(data);
         InputStream signIS = getStream(signature);
         try {
-            return String.valueOf(verifier.verifySign(dataIS, signIS));
+            return verifier.verifySign(dataIS, signIS);
         } catch (VerifyException e) {
             e.printStackTrace();
             return e.getError();
